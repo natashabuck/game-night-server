@@ -2,7 +2,7 @@ var express = require( 'express' );
 var app = express();
 var http = require( 'http' ).createServer( app );
 var io = require( 'socket.io' )( http );
-const cors = require( 'cors' );
+const cors = require( 'cors' )( { origin: true } );
 var shortid = require( 'shortid' )
 
 let rooms = {};
@@ -22,7 +22,7 @@ app.get( '/newRoom/:roomName', function ( req, res, next ) {
   const room = { name: req.params.roomName, id, players: [], game: null }
   rooms[ id ] = room;
   chatLogs[ id ] = [];
-
+  res.header( 'Access-Control-Allow-Origin', '*' )
   res.json( { room, chats: [] } );
 } );
 
@@ -30,8 +30,10 @@ app.get( '/newRoom/:roomName', function ( req, res, next ) {
 app.get( '/checkRoom/:roomId', function ( req, res, next ) {
   const roomId = req.params.roomId;
   if ( rooms[ roomId ] ) {
+    res.header( 'Access-Control-Allow-Origin', '*' )
     res.json( { room: rooms[ roomId ], chats: chatLogs[ roomId ] } );
   } else {
+    res.header( 'Access-Control-Allow-Origin', '*' )
     res.json( { error: 'The room you requested does not exist.' } )
   }
 } );
@@ -45,7 +47,7 @@ app.get( '/room/:roomId/:username/:avatar', function ( req, res, next ) {
 
   rooms[ roomId ] = { ...rooms[ roomId ], players: [ ...rooms[ roomId ].players, player ] }
   chatLogs[ roomId ] = [ ...chatLogs[ roomId ], newPlayerMsg ]
-
+  res.header( 'Access-Control-Allow-Origin', '*' )
   res.json( { room: rooms[ roomId ], chats: chatLogs[ roomId ] } );
 } );
 
