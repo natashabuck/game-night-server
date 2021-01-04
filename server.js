@@ -2,7 +2,12 @@ var express = require( 'express' );
 var cors = require( 'cors' )
 var app = express();
 var http = require( 'http' ).createServer( app );
-var io = require( 'socket.io' )( http );
+var io = require( 'socket.io' )( http, {
+  cors: {
+    origin: "https://example.com",
+    methods: [ "GET", "POST" ]
+  }
+} );
 var shortid = require( 'shortid' )
 
 app.use( cors( { origin: "*" } ) )
