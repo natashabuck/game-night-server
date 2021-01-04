@@ -19,7 +19,8 @@ app.get( '/newRoom/:roomName', function ( req, res, next ) {
   const room = { name: req.params.roomName, id, players: [], game: null }
   rooms[ id ] = room;
   chatLogs[ id ] = [];
-  res.append( 'Access-Control-Allow-Origin', [ '*' ] );
+  res.set( 'Access-Control-Allow-Origin', [ '*' ] );
+  res.set( "Access-Control-Allow-Headers", "Origin" );
   res.json( { room, chats: [] } );
 } );
 
@@ -27,10 +28,12 @@ app.get( '/newRoom/:roomName', function ( req, res, next ) {
 app.get( '/checkRoom/:roomId', function ( req, res, next ) {
   const roomId = req.params.roomId;
   if ( rooms[ roomId ] ) {
-    res.append( 'Access-Control-Allow-Origin', [ '*' ] );
+    res.set( 'Access-Control-Allow-Origin', [ '*' ] );
+    res.set( "Access-Control-Allow-Headers", "Origin" );
     res.json( { room: rooms[ roomId ], chats: chatLogs[ roomId ] } );
   } else {
-    res.append( 'Access-Control-Allow-Origin', [ '*' ] );
+    res.set( 'Access-Control-Allow-Origin', [ '*' ] );
+    res.set( "Access-Control-Allow-Headers", "Origin" );
     res.json( { error: 'The room you requested does not exist.' } )
   }
 } );
@@ -43,7 +46,8 @@ app.get( '/room/:roomId/:username/:avatar', function ( req, res, next ) {
 
   rooms[ roomId ] = { ...rooms[ roomId ], players: [ ...rooms[ roomId ].players, player ] }
   chatLogs[ roomId ] = [ ...chatLogs[ roomId ], newPlayerMsg ]
-  res.append( 'Access-Control-Allow-Origin', [ '*' ] );
+  res.set( 'Access-Control-Allow-Origin', [ '*' ] );
+  res.set( "Access-Control-Allow-Headers", "Origin" );
   res.json( { room: rooms[ roomId ], chats: chatLogs[ roomId ] } );
 } );
 
