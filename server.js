@@ -36,7 +36,6 @@ app.get( '/checkRoom/:roomId', function ( req, res, next ) {
 app.get( '/room/:roomId/:username/:avatar', function ( req, res, next ) {
   const player = { username: req.params.username, avatar: req.params.avatar, score: 0 }
   const newPlayerMsg = { ...player, message: 'has entered the chat' }
-
   const roomId = req.params.roomId;
 
   rooms[ roomId ] = { ...rooms[ roomId ], players: [ ...rooms[ roomId ].players, player ] }
