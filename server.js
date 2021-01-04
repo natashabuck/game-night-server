@@ -2,19 +2,13 @@ var express = require( 'express' );
 var app = express();
 var http = require( 'http' ).createServer( app );
 var io = require( 'socket.io' )( http );
-const cors = require( 'cors' )( { origin: true } );
 var shortid = require( 'shortid' )
 
 let rooms = {};
 let chatLogs = {};
 
-app.use( cors() );
-
 //creating a room
 app.get( '/newRoom/:roomName', function ( req, res, next ) {
-  // const player = { username: req.params.username, avatar: req.params.avatar, score: 0 }
-  // const newPlayerMsg = { ...player, message: 'has entered the chat' }
-
   // id is what other players will be typing in to enter the room so it needs to be easy
   // 0 - O and I - l are difficult to distinguish in the app font
   const id = shortid.generate().slice( 0, 7 ).replace( /0|O|I|l/gi, 'A' )
@@ -22,7 +16,7 @@ app.get( '/newRoom/:roomName', function ( req, res, next ) {
   const room = { name: req.params.roomName, id, players: [], game: null }
   rooms[ id ] = room;
   chatLogs[ id ] = [];
-  res.header( 'Access-Control-Allow-Origin', '*' )
+  res.set( 'Access-Control-Allow-Origin', '*' )
   res.json( { room, chats: [] } );
 } );
 
@@ -30,10 +24,10 @@ app.get( '/newRoom/:roomName', function ( req, res, next ) {
 app.get( '/checkRoom/:roomId', function ( req, res, next ) {
   const roomId = req.params.roomId;
   if ( rooms[ roomId ] ) {
-    res.header( 'Access-Control-Allow-Origin', '*' )
+    res.set( 'Access-Control-Allow-Origin', '*' )
     res.json( { room: rooms[ roomId ], chats: chatLogs[ roomId ] } );
   } else {
-    res.header( 'Access-Control-Allow-Origin', '*' )
+    res.set( 'Access-Control-Allow-Origin', '*' )
     res.json( { error: 'The room you requested does not exist.' } )
   }
 } );
@@ -47,7 +41,7 @@ app.get( '/room/:roomId/:username/:avatar', function ( req, res, next ) {
 
   rooms[ roomId ] = { ...rooms[ roomId ], players: [ ...rooms[ roomId ].players, player ] }
   chatLogs[ roomId ] = [ ...chatLogs[ roomId ], newPlayerMsg ]
-  res.header( 'Access-Control-Allow-Origin', '*' )
+  res.set( 'Access-Control-Allow-Origin', '*' )
   res.json( { room: rooms[ roomId ], chats: chatLogs[ roomId ] } );
 } );
 
