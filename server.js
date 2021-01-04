@@ -1,8 +1,11 @@
 var express = require( 'express' );
+var cors = require( 'cors' )
 var app = express();
 var http = require( 'http' ).createServer( app );
 var io = require( 'socket.io' )( http );
 var shortid = require( 'shortid' )
+
+app.use( cors( { origin: true } ) )
 
 let rooms = {};
 let chatLogs = {};
