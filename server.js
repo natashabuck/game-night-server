@@ -5,7 +5,7 @@ var http = require( 'http' ).createServer( app );
 var io = require( 'socket.io' )( http );
 var shortid = require( 'shortid' )
 
-app.use( cors( { origin: true } ) )
+app.use( cors( { origin: "*" } ) )
 
 let rooms = {};
 let chatLogs = {};
