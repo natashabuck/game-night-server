@@ -1,197 +1,136 @@
-const express = require( "express" );
-const cors = require( "cors" );
-const app = express();
-
-/* -------------------------------------------------------------------------- */
-
-app.get( "/no-cors", ( req, res ) => {
-  console.info( "GET /no-cors" );
-  res.json( {
-    text: "You should not see this via a CORS request."
-  } );
+//server
+var express = require( 'express' );
+var cors = require( 'cors' )
+var shortid = require( 'shortid' )
+var app = express();
+//websockets
+var http = require( 'http' ).createServer( app );
+var io = require( 'socket.io' )( http, {
+  origins: [ 'http://localhost:3000' ],
+  handlePreflightRequest: ( req, res ) => {
+    res.writeHead( 200, {
+      "Access-Control-Allow-Origin": "http://localhost:3000",
+      "Access-Control-Allow-Methods": "GET,POST",
+      "Access-Control-Allow-Credentials": true
+    } );
+    res.end();
+  }
 } );
 
-/* -------------------------------------------------------------------------- */
+let rooms = {};
+let chatLogs = {};
 
-app.head( "/simple-cors", cors(), ( req, res ) => {
-  console.info( "HEAD /simple-cors" );
-  res.sendStatus( 204 );
-} );
-app.get( "/simple-cors", cors(), ( req, res ) => {
-  console.info( "GET /simple-cors" );
-  res.json( {
-    text: "Simple CORS requests are working. [GET]"
-  } );
-} );
-app.post( "/simple-cors", cors(), ( req, res ) => {
-  console.info( "POST /simple-cors" );
-  res.json( {
-    text: "Simple CORS requests are working. [POST]"
-  } );
+//creating a room
+app.get( '/newRoom/:roomName', cors( { origin: 'http://localhost:3000' } ), ( req, res ) => {
+  // id is what other players will be typing in to enter the room so it needs to be easy
+  // 0 - O and I - l are difficult to distinguish in the app font
+  const id = shortid.generate().slice( 0, 7 ).replace( /0|O|I|l/gi, 'A' )
+
+  const room = { name: req.params.roomName, id, players: [], game: null }
+  rooms[ id ] = room;
+  chatLogs[ id ] = [];
+  res.setHeader( 'Access-Control-Allow-Origin', [ 'http://localhost:3000' ] );
+  // res.set( "Access-Control-Allow-Headers", "Origin" );
+  res.json( { room, chats: [] } );
 } );
 
-/* -------------------------------------------------------------------------- */
-
-app.options( "/complex-cors", cors() );
-app.delete( "/complex-cors", cors(), ( req, res ) => {
-  console.info( "DELETE /complex-cors" );
-  res.json( {
-    text: "Complex CORS requests are working. [DELETE]"
-  } );
+//check to see if room exists before uploading player data
+app.get( '/checkRoom/:roomId', cors( { origin: 'http://localhost:3000' } ), ( req, res ) => {
+  const roomId = req.params.roomId;
+  if ( rooms[ roomId ] ) {
+    res.setHeader( 'Access-Control-Allow-Origin', [ 'http://localhost:3000' ] );
+    // res.set( "Access-Control-Allow-Headers", "Origin" );
+    res.json( { room: rooms[ roomId ], chats: chatLogs[ roomId ] } );
+  } else {
+    res.setHeader( 'Access-Control-Allow-Origin', [ 'http://localhost:3000' ] );
+    // res.set( "Access-Control-Allow-Headers", "Origin" );
+    res.json( { error: 'The room you requested does not exist.' } )
+  }
 } );
 
-/* -------------------------------------------------------------------------- */
+//joining a room
+app.get( '/room/:roomId/:username/:avatar', cors( { origin: 'http://localhost:3000' } ), ( req, res ) => {
+  const player = { username: req.params.username, avatar: req.params.avatar, score: 0 }
+  const newPlayerMsg = { ...player, message: 'has entered the chat' }
+  const roomId = req.params.roomId;
 
-const issue2options = {
-  origin: true,
-  methods: [ "POST" ],
-  credentials: true,
-  maxAge: 3600
-};
-app.options( "/issue-2", cors( issue2options ) );
-app.post( "/issue-2", cors( issue2options ), ( req, res ) => {
-  console.info( "POST /issue-2" );
-  res.json( {
-    text: "Issue #2 is fixed."
-  } );
+  rooms[ roomId ] = { ...rooms[ roomId ], players: [ ...rooms[ roomId ].players, player ] }
+  chatLogs[ roomId ] = [ ...chatLogs[ roomId ], newPlayerMsg ]
+  res.setHeader( 'Access-Control-Allow-Origin', [ 'http://localhost:3000' ] );
+  // res.set( "Access-Control-Allow-Headers", "Origin" );
+  res.json( { room: rooms[ roomId ], chats: chatLogs[ roomId ] } );
 } );
 
-/* -------------------------------------------------------------------------- */
+//websockets that will alert the whole group of events immediately
+io.on( 'connection', function ( socket ) {
+  socket.on( 'event://send-message', function ( msg ) {
+    const payload = JSON.parse( msg );
+    if ( chatLogs[ payload.room.id ] ) {
+      chatLogs[ payload.room.id ] = [ ...chatLogs[ payload.room.id ], payload.data ];
+    }
+    const response = JSON.stringify( {
+      room: rooms[ payload.room.id ],
+      chats: chatLogs[ payload.room.id ]
+    } )
+    socket.broadcast.emit( 'event://get-message', response );
+  } )
+} );
 
-if ( !module.parent ) {
-  const port = process.env.PORT || 3001;
+io.on( 'connection', function ( socket ) {
+  let player, roomId;
+  socket.on( 'event://add-player', function ( msg ) {
+    const payload = JSON.parse( msg );
 
-  app.listen( port, () => {
-    console.log( "Express server listening on port " + port + "." );
-  } );
-}
-// //server
-// var express = require( 'express' );
-// var cors = require( 'cors' )
-// var shortid = require( 'shortid' )
-// var app = express();
-// //websockets
-// var http = require( 'http' ).createServer( app );
-// var io = require( 'socket.io' )( http, {
-//   cors: {
-//     origin: '*'
-//   }
-// } );
+    if ( payload.data && payload.room ) {
+      player = payload.data
+      roomId = payload.room.id
+    }
 
-// let rooms = {};
-// let chatLogs = {};
+    const response = JSON.stringify( {
+      room: rooms[ payload.room.id ],
+      chats: chatLogs[ payload.room.id ]
+    } )
+    socket.broadcast.emit( 'event://get-player', response );
+  } )
+  socket.on( 'disconnect', function () {
+    if ( player ) { //this was causing errors in dev hot reloading
+      const { username, avatar } = player
 
-// //creating a room
-// app.get( '/newRoom/:roomName', cors( { origin: 'http://localhost:3000' } ), ( req, res ) => {
-//   // id is what other players will be typing in to enter the room so it needs to be easy
-//   // 0 - O and I - l are difficult to distinguish in the app font
-//   const id = shortid.generate().slice( 0, 7 ).replace( /0|O|I|l/gi, 'A' )
+      let newPlayerList = [ ...rooms[ roomId ].players ]
+      newPlayerList = newPlayerList.filter( item => item.username !== username )
+      rooms[ roomId ].players = newPlayerList
 
-//   const room = { name: req.params.roomName, id, players: [], game: null }
-//   rooms[ id ] = room;
-//   chatLogs[ id ] = [];
-//   res.setHeader( 'Access-Control-Allow-Origin', [ 'http://localhost:3000' ] );
-//   // res.set( "Access-Control-Allow-Headers", "Origin" );
-//   res.json( { room, chats: [] } );
-// } );
+      const playerExitMsg = { username, avatar, message: 'has left the chat' }
+      chatLogs[ roomId ] = [ ...chatLogs[ roomId ], playerExitMsg ]
 
-// //check to see if room exists before uploading player data
-// app.get( '/checkRoom/:roomId', cors( { origin: 'http://localhost:3000' } ), ( req, res ) => {
-//   const roomId = req.params.roomId;
-//   if ( rooms[ roomId ] ) {
-//     res.setHeader( 'Access-Control-Allow-Origin', [ 'http://localhost:3000' ] );
-//     // res.set( "Access-Control-Allow-Headers", "Origin" );
-//     res.json( { room: rooms[ roomId ], chats: chatLogs[ roomId ] } );
-//   } else {
-//     res.setHeader( 'Access-Control-Allow-Origin', [ 'http://localhost:3000' ] );
-//     // res.set( "Access-Control-Allow-Headers", "Origin" );
-//     res.json( { error: 'The room you requested does not exist.' } )
-//   }
-// } );
+      const response = JSON.stringify( {
+        room: rooms[ roomId ],
+        chats: chatLogs[ roomId ]
+      } )
+      socket.broadcast.emit( 'event://get-player', response );
+    }
+  }
+  )
+} );
 
-// //joining a room
-// app.get( '/room/:roomId/:username/:avatar', cors( { origin: 'http://localhost:3000' } ), ( req, res ) => {
-//   const player = { username: req.params.username, avatar: req.params.avatar, score: 0 }
-//   const newPlayerMsg = { ...player, message: 'has entered the chat' }
-//   const roomId = req.params.roomId;
+io.on( 'connection', function ( socket ) {
+  socket.on( 'event://update-score', function ( msg ) {
+    const payload = JSON.parse( msg );
+    rooms[ payload.roomId ].players[ payload.playerIdx ].score = payload.score
+    const response = JSON.stringify( payload )
+    socket.broadcast.emit( 'event://get-score', response );
+  } )
+} );
 
-//   rooms[ roomId ] = { ...rooms[ roomId ], players: [ ...rooms[ roomId ].players, player ] }
-//   chatLogs[ roomId ] = [ ...chatLogs[ roomId ], newPlayerMsg ]
-//   res.setHeader( 'Access-Control-Allow-Origin', [ 'http://localhost:3000' ] );
-//   // res.set( "Access-Control-Allow-Headers", "Origin" );
-//   res.json( { room: rooms[ roomId ], chats: chatLogs[ roomId ] } );
-// } );
+io.on( 'connection', function ( socket ) {
+  socket.on( 'event://update-game', function ( msg ) {
+    const payload = JSON.parse( msg );
+    rooms[ payload.roomId ].game = payload.game
+    const response = JSON.stringify( payload )
+    socket.broadcast.emit( 'event://get-game', response );
+  } )
+} );
 
-// //websockets that will alert the whole group of events immediately
-// io.on( 'connection', function ( socket ) {
-//   socket.on( 'event://send-message', function ( msg ) {
-//     const payload = JSON.parse( msg );
-//     if ( chatLogs[ payload.room.id ] ) {
-//       chatLogs[ payload.room.id ] = [ ...chatLogs[ payload.room.id ], payload.data ];
-//     }
-//     const response = JSON.stringify( {
-//       room: rooms[ payload.room.id ],
-//       chats: chatLogs[ payload.room.id ]
-//     } )
-//     socket.broadcast.emit( 'event://get-message', response );
-//   } )
-// } );
-
-// io.on( 'connection', function ( socket ) {
-//   let player, roomId;
-//   socket.on( 'event://add-player', function ( msg ) {
-//     const payload = JSON.parse( msg );
-
-//     if ( payload.data && payload.room ) {
-//       player = payload.data
-//       roomId = payload.room.id
-//     }
-
-//     const response = JSON.stringify( {
-//       room: rooms[ payload.room.id ],
-//       chats: chatLogs[ payload.room.id ]
-//     } )
-//     socket.broadcast.emit( 'event://get-player', response );
-//   } )
-//   socket.on( 'disconnect', function () {
-//     if ( player ) { //this was causing errors in dev hot reloading
-//       const { username, avatar } = player
-
-//       let newPlayerList = [ ...rooms[ roomId ].players ]
-//       newPlayerList = newPlayerList.filter( item => item.username !== username )
-//       rooms[ roomId ].players = newPlayerList
-
-//       const playerExitMsg = { username, avatar, message: 'has left the chat' }
-//       chatLogs[ roomId ] = [ ...chatLogs[ roomId ], playerExitMsg ]
-
-//       const response = JSON.stringify( {
-//         room: rooms[ roomId ],
-//         chats: chatLogs[ roomId ]
-//       } )
-//       socket.broadcast.emit( 'event://get-player', response );
-//     }
-//   }
-//   )
-// } );
-
-// io.on( 'connection', function ( socket ) {
-//   socket.on( 'event://update-score', function ( msg ) {
-//     const payload = JSON.parse( msg );
-//     rooms[ payload.roomId ].players[ payload.playerIdx ].score = payload.score
-//     const response = JSON.stringify( payload )
-//     socket.broadcast.emit( 'event://get-score', response );
-//   } )
-// } );
-
-// io.on( 'connection', function ( socket ) {
-//   socket.on( 'event://update-game', function ( msg ) {
-//     const payload = JSON.parse( msg );
-//     rooms[ payload.roomId ].game = payload.game
-//     const response = JSON.stringify( payload )
-//     socket.broadcast.emit( 'event://get-game', response );
-//   } )
-// } );
-
-// http.listen( 5000, function () {
-//   console.log( 'listening on *:5000' );
-// } );
+http.listen( 5000, function () {
+  console.log( 'listening on *:5000' );
+} );
