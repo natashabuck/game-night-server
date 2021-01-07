@@ -4,8 +4,7 @@ var app = express();
 var http = require( 'http' ).createServer( app );
 var io = require( 'socket.io' )( http, {
   cors: {
-    origin: true,
-    methods: [ "GET", "POST" ]
+    origin: '*'
   }
 } );
 var shortid = require( 'shortid' )
