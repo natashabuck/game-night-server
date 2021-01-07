@@ -4,7 +4,7 @@ var app = express();
 var http = require( 'http' ).createServer( app );
 var io = require( 'socket.io' )( http, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: true,
     methods: [ "GET", "POST" ]
   }
 } );
