@@ -20,6 +20,10 @@ const io = require( 'socket.io' )( server, options );
 let rooms = {};
 let chatLogs = {};
 
+app.get( '/', ( req, resp ) => {
+  resp.send( 'Server running' )
+} )
+
 //creating a room
 app.get( '/newRoom/:roomName', cors( { origin: 'http://localhost:3000' } ), ( req, res ) => {
   // id is what other players will be typing in to enter the room so it needs to be easy
