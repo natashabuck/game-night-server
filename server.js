@@ -5,7 +5,7 @@ const app = require( 'express' )();
 //websockets
 const server = require( 'http' ).createServer( app );
 const options = {
-  origins: [ 'http://localhost:3000' ],
+  origins: [ 'http://localhost:3000', 'https://www.game-night.app' ],
   handlePreflightRequest: ( req, res ) => {
     res.writeHead( 200, {
       "Access-Control-Allow-Origin": "http://localhost:3000",
