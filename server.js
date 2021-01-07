@@ -22,7 +22,7 @@ let rooms = {};
 let chatLogs = {};
 
 //creating a room
-app.get( '/newRoom/:roomName', ( req, res ) => {
+app.get( '/newRoom/:roomName', cors( { origin: [ 'http://localhost:3000', 'https://www.game-night.app' ] } ), ( req, res ) => {
   // id is what other players will be typing in to enter the room so it needs to be easy
   // 0 - O and I - l are difficult to distinguish in the app font
   const id = shortid.generate().slice( 0, 7 ).replace( /0|O|I|l/gi, 'A' )
@@ -34,7 +34,7 @@ app.get( '/newRoom/:roomName', ( req, res ) => {
 } );
 
 //check to see if room exists before uploading player data
-app.get( '/checkRoom/:roomId', ( req, res ) => {
+app.get( '/checkRoom/:roomId', cors( { origin: [ 'http://localhost:3000', 'https://www.game-night.app' ] } ), ( req, res ) => {
   const roomId = req.params.roomId;
   if ( rooms[ roomId ] ) {
     res.json( { room: rooms[ roomId ], chats: chatLogs[ roomId ] } );
@@ -44,7 +44,7 @@ app.get( '/checkRoom/:roomId', ( req, res ) => {
 } );
 
 //joining a room
-app.get( '/room/:roomId/:username/:avatar', ( req, res ) => {
+app.get( '/room/:roomId/:username/:avatar', cors( { origin: [ 'http://localhost:3000', 'https://www.game-night.app' ] } ), ( req, res ) => {
   const player = { username: req.params.username, avatar: req.params.avatar, score: 0 }
   const newPlayerMsg = { ...player, message: 'has entered the chat' }
   const roomId = req.params.roomId;
