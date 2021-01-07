@@ -16,6 +16,7 @@ const options = {
   }
 };
 const io = require( 'socket.io' )( server, options );
+const PORT = process.env.PORT || 5000;
 
 let rooms = {};
 let chatLogs = {};
@@ -135,4 +136,4 @@ io.on( 'connection', ( socket ) => {
   } )
 } );
 
-server.listen( 5000 );
+server.listen( PORT );
