@@ -5,18 +5,7 @@ const app = require( 'express' )();
 //websockets
 const server = require( 'http' ).createServer( app );
 const originList = [ 'http://localhost:3000', 'https://www.game-night.app' ]
-const options = {
-  origins: originList,
-  // handlePreflightRequest: ( req, res ) => {
-  //   res.writeHead( 200, {
-  //     "Access-Control-Allow-Origin": "http://localhost:3000",
-  //     "Access-Control-Allow-Methods": "GET,POST",
-  //     "Access-Control-Allow-Credentials": true
-  //   } );
-  //   res.end();
-  // }
-};
-const io = require( 'socket.io' )( server, options );
+const io = require( 'socket.io' )( server, { origin: originList } );
 const PORT = process.env.PORT || 5000;
 
 let rooms = {};
