@@ -9,7 +9,7 @@ const options = {
   origins: originList,
   handlePreflightRequest: ( req, res ) => {
     res.writeHead( 200, {
-      "Access-Control-Allow-Origin": true,
+      "Access-Control-Allow-Origin": "https://www.game-night.app",
       "Access-Control-Allow-Methods": "GET,POST",
       "Access-Control-Allow-Credentials": true
     } );
@@ -103,8 +103,7 @@ io.on( 'connection', ( socket ) => {
       } )
       socket.broadcast.emit( 'event://get-player', response );
     }
-  }
-  )
+  } )
 } );
 
 io.on( 'connection', ( socket ) => {
