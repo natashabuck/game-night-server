@@ -9,7 +9,7 @@ const options = {
   origins: originList,
   handlePreflightRequest: ( req, res ) => {
     res.writeHead( 200, {
-      "Access-Control-Allow-Origin": "http://localhost:3000",
+      "Access-Control-Allow-Origin": originList,
       "Access-Control-Allow-Methods": "GET,POST",
       "Access-Control-Allow-Credentials": true
     } );
