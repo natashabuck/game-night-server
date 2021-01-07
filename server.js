@@ -1,10 +1,9 @@
 //server
-var cors = require( 'cors' )
-var shortid = require( 'shortid' )
+const cors = require( 'cors' )
+const shortid = require( 'shortid' )
 const app = require( 'express' )();
 //websockets
-import { createServer } from "http";
-const server = createServer( app );
+const server = require( 'http' ).createServer( app );
 const options = {
   origins: [ 'http://localhost:3000' ],
   handlePreflightRequest: ( req, res ) => {
