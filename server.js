@@ -1,11 +1,11 @@
 //server
-var express = require( 'express' );
 var cors = require( 'cors' )
 var shortid = require( 'shortid' )
-var app = express();
+const app = require( 'express' )();
 //websockets
-var http = require( 'http' ).createServer( app );
-var io = require( 'socket.io' )( http, {
+import { createServer } from "http";
+const server = createServer( app );
+const options = {
   origins: [ 'http://localhost:3000' ],
   handlePreflightRequest: ( req, res ) => {
     res.writeHead( 200, {
@@ -15,7 +15,8 @@ var io = require( 'socket.io' )( http, {
     } );
     res.end();
   }
-} );
+};
+const io = require( 'socket.io' )( server, options );
 
 let rooms = {};
 let chatLogs = {};
@@ -29,7 +30,7 @@ app.get( '/newRoom/:roomName', cors( { origin: 'http://localhost:3000' } ), ( re
   const room = { name: req.params.roomName, id, players: [], game: null }
   rooms[ id ] = room;
   chatLogs[ id ] = [];
-  res.setHeader( 'Access-Control-Allow-Origin', [ 'http://localhost:3000' ] );
+  // res.setHeader( 'Access-Control-Allow-Origin', [ 'http://localhost:3000' ] );
   // res.set( "Access-Control-Allow-Headers", "Origin" );
   res.json( { room, chats: [] } );
 } );
@@ -38,11 +39,11 @@ app.get( '/newRoom/:roomName', cors( { origin: 'http://localhost:3000' } ), ( re
 app.get( '/checkRoom/:roomId', cors( { origin: 'http://localhost:3000' } ), ( req, res ) => {
   const roomId = req.params.roomId;
   if ( rooms[ roomId ] ) {
-    res.setHeader( 'Access-Control-Allow-Origin', [ 'http://localhost:3000' ] );
+    // res.setHeader( 'Access-Control-Allow-Origin', [ 'http://localhost:3000' ] );
     // res.set( "Access-Control-Allow-Headers", "Origin" );
     res.json( { room: rooms[ roomId ], chats: chatLogs[ roomId ] } );
   } else {
-    res.setHeader( 'Access-Control-Allow-Origin', [ 'http://localhost:3000' ] );
+    // res.setHeader( 'Access-Control-Allow-Origin', [ 'http://localhost:3000' ] );
     // res.set( "Access-Control-Allow-Headers", "Origin" );
     res.json( { error: 'The room you requested does not exist.' } )
   }
@@ -62,8 +63,8 @@ app.get( '/room/:roomId/:username/:avatar', cors( { origin: 'http://localhost:30
 } );
 
 //websockets that will alert the whole group of events immediately
-io.on( 'connection', function ( socket ) {
-  socket.on( 'event://send-message', function ( msg ) {
+io.on( 'connection', ( socket ) => {
+  socket.on( 'event://send-message', ( msg ) => {
     const payload = JSON.parse( msg );
     if ( chatLogs[ payload.room.id ] ) {
       chatLogs[ payload.room.id ] = [ ...chatLogs[ payload.room.id ], payload.data ];
@@ -76,9 +77,9 @@ io.on( 'connection', function ( socket ) {
   } )
 } );
 
-io.on( 'connection', function ( socket ) {
+io.on( 'connection', ( socket ) => {
   let player, roomId;
-  socket.on( 'event://add-player', function ( msg ) {
+  socket.on( 'event://add-player', ( msg ) => {
     const payload = JSON.parse( msg );
 
     if ( payload.data && payload.room ) {
@@ -113,8 +114,8 @@ io.on( 'connection', function ( socket ) {
   )
 } );
 
-io.on( 'connection', function ( socket ) {
-  socket.on( 'event://update-score', function ( msg ) {
+io.on( 'connection', ( socket ) => {
+  socket.on( 'event://update-score', ( msg ) => {
     const payload = JSON.parse( msg );
     rooms[ payload.roomId ].players[ payload.playerIdx ].score = payload.score
     const response = JSON.stringify( payload )
@@ -122,8 +123,8 @@ io.on( 'connection', function ( socket ) {
   } )
 } );
 
-io.on( 'connection', function ( socket ) {
-  socket.on( 'event://update-game', function ( msg ) {
+io.on( 'connection', ( socket ) => {
+  socket.on( 'event://update-game', ( msg ) => {
     const payload = JSON.parse( msg );
     rooms[ payload.roomId ].game = payload.game
     const response = JSON.stringify( payload )
@@ -131,6 +132,4 @@ io.on( 'connection', function ( socket ) {
   } )
 } );
 
-http.listen( 5000, function () {
-  console.log( 'listening on *:5000' );
-} );
+server.listen( 5000 );
