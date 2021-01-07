@@ -1,19 +1,21 @@
+//server
 var express = require( 'express' );
 var cors = require( 'cors' )
+var shortid = require( 'shortid' )
 var app = express();
+//websockets
 var http = require( 'http' ).createServer( app );
 var io = require( 'socket.io' )( http, {
   cors: {
     origin: '*'
   }
 } );
-var shortid = require( 'shortid' )
 
 let rooms = {};
 let chatLogs = {};
 
 //creating a room
-app.get( '/newRoom/:roomName', cors(), function ( req, res, next ) {
+app.get( '/newRoom/:roomName', cors( { origin: true } ), ( req, res ) => {
   // id is what other players will be typing in to enter the room so it needs to be easy
   // 0 - O and I - l are difficult to distinguish in the app font
   const id = shortid.generate().slice( 0, 7 ).replace( /0|O|I|l/gi, 'A' )
@@ -27,7 +29,7 @@ app.get( '/newRoom/:roomName', cors(), function ( req, res, next ) {
 } );
 
 //check to see if room exists before uploading player data
-app.get( '/checkRoom/:roomId', cors(), function ( req, res, next ) {
+app.get( '/checkRoom/:roomId', cors( { origin: true } ), ( req, res ) => {
   const roomId = req.params.roomId;
   if ( rooms[ roomId ] ) {
     // res.set( 'Access-Control-Allow-Origin', [ '*' ] );
@@ -41,7 +43,7 @@ app.get( '/checkRoom/:roomId', cors(), function ( req, res, next ) {
 } );
 
 //joining a room
-app.get( '/room/:roomId/:username/:avatar', cors(), function ( req, res, next ) {
+app.get( '/room/:roomId/:username/:avatar', cors( { origin: true } ), ( req, res ) => {
   const player = { username: req.params.username, avatar: req.params.avatar, score: 0 }
   const newPlayerMsg = { ...player, message: 'has entered the chat' }
   const roomId = req.params.roomId;
