@@ -8,6 +8,7 @@ const originList = [ 'http://localhost:3000', 'https://www.game-night.app' ]
 const options = {
   origins: originList,
   handlePreflightRequest: ( req, res ) => {
+    console.log( req )
     res.writeHead( 200, {
       "Access-Control-Allow-Origin": "https://www.game-night.app",
       "Access-Control-Allow-Methods": "GET,POST",
