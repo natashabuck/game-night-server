@@ -21,9 +21,9 @@ const PORT = process.env.PORT || 5000;
 let rooms = {};
 let chatLogs = {};
 
-app.get( '/', ( req, resp ) => {
-  resp.send( 'Server running' )
-} )
+// app.get( '/', ( req, resp ) => {
+//   resp.send( 'Server running' )
+// } )
 
 //creating a room
 app.get( '/newRoom/:roomName', cors( { origin: 'http://localhost:3000' } ), ( req, res ) => {
@@ -34,8 +34,6 @@ app.get( '/newRoom/:roomName', cors( { origin: 'http://localhost:3000' } ), ( re
   const room = { name: req.params.roomName, id, players: [], game: null }
   rooms[ id ] = room;
   chatLogs[ id ] = [];
-  // res.setHeader( 'Access-Control-Allow-Origin', [ 'http://localhost:3000' ] );
-  // res.set( "Access-Control-Allow-Headers", "Origin" );
   res.json( { room, chats: [] } );
 } );
 
@@ -43,12 +41,8 @@ app.get( '/newRoom/:roomName', cors( { origin: 'http://localhost:3000' } ), ( re
 app.get( '/checkRoom/:roomId', cors( { origin: 'http://localhost:3000' } ), ( req, res ) => {
   const roomId = req.params.roomId;
   if ( rooms[ roomId ] ) {
-    // res.setHeader( 'Access-Control-Allow-Origin', [ 'http://localhost:3000' ] );
-    // res.set( "Access-Control-Allow-Headers", "Origin" );
     res.json( { room: rooms[ roomId ], chats: chatLogs[ roomId ] } );
   } else {
-    // res.setHeader( 'Access-Control-Allow-Origin', [ 'http://localhost:3000' ] );
-    // res.set( "Access-Control-Allow-Headers", "Origin" );
     res.json( { error: 'The room you requested does not exist.' } )
   }
 } );
@@ -62,7 +56,6 @@ app.get( '/room/:roomId/:username/:avatar', cors( { origin: 'http://localhost:30
   rooms[ roomId ] = { ...rooms[ roomId ], players: [ ...rooms[ roomId ].players, player ] }
   chatLogs[ roomId ] = [ ...chatLogs[ roomId ], newPlayerMsg ]
   res.setHeader( 'Access-Control-Allow-Origin', [ 'http://localhost:3000' ] );
-  // res.set( "Access-Control-Allow-Headers", "Origin" );
   res.json( { room: rooms[ roomId ], chats: chatLogs[ roomId ] } );
 } );
 
