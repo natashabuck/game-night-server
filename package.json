@@ -16,7 +16,9 @@
     "express-ws": "^4.0.0",
     "heroku": "^7.47.6",
     "heroku-cli": "^7.0.9",
+    "node-forge": "^0.10.0",
+    "node-notifier": "^8.0.1",
     "shortid": "^2.2.16",
-    "socket.io": "^2.3.0"
+    "socket.io": "^2.4.0"
   }
 }
