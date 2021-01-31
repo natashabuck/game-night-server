@@ -5,19 +5,19 @@ const app = require( 'express' )();
 //websockets
 const server = require( 'http' ).createServer( app );
 const originList = [ 'http://localhost:3000', 'https://www.game-night.app' ]
-const io = require( 'socket.io' )( server, { origin: originList } );
+const io = require( 'socket.io' )( server, { origins: originList } );
 const PORT = process.env.PORT || 5000;
 
 let rooms = {};
 let chatLogs = {};
 
 //creating a room
-app.get( '/newRoom/:roomName', cors( { origin: originList } ), ( req, res ) => {
+app.get( '/newRoom', cors( { origin: originList } ), ( req, res ) => {
   // id is what other players will be typing in to enter the room so it needs to be easy
   // 0 - O and I - l are difficult to distinguish in the app font
   const id = shortid.generate().slice( 0, 7 ).replace( /0|O|I|l/gi, 'A' )
 
-  const room = { name: req.params.roomName, id, players: [], game: null }
+  const room = { id, players: [], game: null }
   rooms[ id ] = room;
   chatLogs[ id ] = [];
   res.json( { room, chats: [] } );
