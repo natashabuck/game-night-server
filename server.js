@@ -11,6 +11,7 @@ const PORT = process.env.PORT || 5000;
 let rooms = {};
 let chatLogs = {};
 
+
 //creating a room
 app.get( '/newRoom', cors( { origin: originList } ), ( req, res ) => {
   // id is what other players will be typing in to enter the room so it needs to be easy
